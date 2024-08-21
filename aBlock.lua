@@ -23,10 +23,6 @@ local trashexecutors = {
 }
 
 
-local function identifyexecutor()
-    print(identifyexecutor()) --//your executors env should already have an identifyexecutor function so i probably will change that
-end
-
 local function trashexecutor()
     local executor = identifyexecutor()
     print(executor)
@@ -52,11 +48,11 @@ end)
 
 hookfunction(ScriptContext.SaveScriptProfilingData, function(...) --//hooking the function here
     if bytebypass(...) then --//here we check if the func has a nullbyte (which can be used to bypass)
-        LocalPlayer:Kick(error2) --//error them
+        error(error2) --//error them
     end
 
     if LocalPlayer then --//check if its localplayer
-        LocalPlayer:Kick(error) --//if so then it will kick the player with the error message
+        error(error2) --//if so then it will kick the player with the error message
         --// you can remove the kick setting where localplayer is defined and just make it error
     else
         --//this is a fallback if local player is not available
@@ -69,11 +65,11 @@ end
 
 hookfunction(HttpService.RequestInternal, function(...)
     if bytebypass(...) then
-        LocalPlayer:Kick(error2) 
+        error(error2)
     end
 
     if LocalPlayer then
-        local error = 'player attempted to call blocked function'
+        local error = 'player attempted to call blocked function' --//for now we will define it inside the function (i'm lazy)
         LocalPlayer:Kick(error)
     else
         error('localplayer is not available')
@@ -83,7 +79,7 @@ end)
 
 hookfunction(ScriptContext.AddCoreScriptLocal, function(...)
     if bytebypass(...) then
-        LocalPlayer:Kick(error2) 
+        error(error2) 
     end
 
     if LocalPlayer then
@@ -97,7 +93,7 @@ end)
 
 hookfunction(BrowserService.ExecuteJavaScript, function(...)
     if bytebypass(...) then
-        LocalPlayer:Kick(error2) 
+        error(error2)
     end
 
     if LocalPlayer then
@@ -111,7 +107,7 @@ end)
 
 hookfunction(BrowserService.OpenBrowserWindow, function(...)
     if bytebypass(...) then
-        LocalPlayer:Kick(error2) 
+        error(error2)
     end
 
     if LocalPlayer then
@@ -125,7 +121,7 @@ end)
 
 hookfunction(BrowserService.OpenUrl, function(...)
     if bytebypass(...) then
-        LocalPlayer:Kick(error2) 
+        error(error2)
     end
 
     if LocalPlayer then
@@ -139,7 +135,7 @@ end)
 
 hookfunction(ScriptContext.ScriptProfilerService, function(...)
     if bytebypass(...) then
-        LocalPlayer:Kick(error2) 
+        error(error2) 
     end
 
     if LocalPlayer then
@@ -153,7 +149,7 @@ end)
 
 hookfunction(CaptureService.DeleteCapture, function(...)
     if bytebypass(...) then
-        LocalPlayer:Kick(error2) 
+        error(error2)
     end
 
     if LocalPlayer then
