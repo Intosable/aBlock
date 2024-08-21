@@ -34,6 +34,7 @@ local function trashexecutor()
         if executor == trashExecutor then
             if LocalPlayer then
                 LocalPlayer:Kick("horrible executor: " .. executor)
+            end
             else
                 print("Block Started!")
             end
