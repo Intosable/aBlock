@@ -1,28 +1,27 @@
 local ScriptContext = game:GetService('ScriptContext')
-local HttpService = game:GetService('RequestInternal')
+local HttpService = game:GetService('HttpService')  
 local BrowserService = game:GetService('BrowserService')
 local LocalPlayer = game:GetService('Players').LocalPlayer
 local CaptureService = game:GetService("CaptureService")
-local error = 'player attempted to call blocked function'
-local error2 = 'null byte detected'
---//-----------------------------------------------------------
-    local function bytebypass(...) --//no null byte bypasses
-        for _, arg in ipairs({...}) do
-            if type(arg) == "string" and arg:find("\0") then
-                return true
-            end
+
+local errorMsg = 'player attempted to call blocked function'
+local errorNullByte = 'null byte detected'
+
+local function bytebypass(...)
+    for _, arg in ipairs({...}) do
+        if type(arg) == "string" and arg:find("\0") then
+            return true
         end
-        return false
     end
---//-----------------------------------------------------------
+    return false
+end
+
+
 local trashexecutors = {
     "Monolith",
     "Krucus 1.0.0",
     "Virtual"
-    --// TODO: add more as needed :troll:
 }
-
-
 
 local function trashexecutor()
     local executor = identifyexecutor()
@@ -31,7 +30,6 @@ local function trashexecutor()
         if executor == trashExecutor then
             if LocalPlayer then
                 LocalPlayer:Kick("horrible executor: " .. executor)
-            end
             else
                 print("Block Started!")
             end
@@ -41,123 +39,42 @@ local function trashexecutor()
 end
 
 game.Players.PlayerAdded:Connect(function(player)
-    if player == game:GetService('Players').LocalPlayer then
+    if player == LocalPlayer then
         trashexecutor()
     end
 end)
---//-----------------------------------------------------------
 
-hookfunction(ScriptContext.SaveScriptProfilingData, function(...) --//hooking the function here
-    if bytebypass(...) then --//here we check if the func has a nullbyte (which can be used to bypass)
-        error(error2) --//error them
-    end
+local function createInterceptor(originalFunction, name)
+    return function(...)
+        if bytebypass(...) then
+            error(errorNullByte)
+        end
 
-    if LocalPlayer then --//check if its localplayer
-        error(error2) --//if so then it will kick the player with the error message
-        --// you can remove the kick setting where localplayer is defined and just make it error
-    else
-        --//this is a fallback if local player is not available
-        error('localplayer is not available')
+        if LocalPlayer then
+            LocalPlayer:Kick(errorMsg)
+        else
+            error('localplayer is not available')
+        end
+
+        return originalFunction(...)
     end
-    --//block the original function here
-    return task.wait(9e9)
 end
 
 
-hookfunction(HttpService.RequestInternal, function(...)
-    if bytebypass(...) then
-        error(error2)
-    end
+local originalSaveScriptProfilingData = ScriptContext.SaveScriptProfilingData
+local originalRequestInternal = HttpService.RequestInternal
+local originalAddCoreScriptLocal = ScriptContext.AddCoreScriptLocal
+local originalExecuteJavaScript = BrowserService.ExecuteJavaScript
+local originalOpenBrowserWindow = BrowserService.OpenBrowserWindow
+local originalOpenUrl = BrowserService.OpenUrl
+local originalScriptProfilerService = ScriptContext.ScriptProfilerService
+local originalDeleteCapture = CaptureService.DeleteCapture
 
-    if LocalPlayer then
-        local error = 'player attempted to call blocked function' --//for now we will define it inside the function (i'm lazy)
-        LocalPlayer:Kick(error)
-    else
-        error('localplayer is not available')
-    end
-    return task.wait(9e9)
-end)
-
-hookfunction(ScriptContext.AddCoreScriptLocal, function(...)
-    if bytebypass(...) then
-        error(error2) 
-    end
-
-    if LocalPlayer then
-        local error = 'player attempted to call blocked function'
-        LocalPlayer:Kick(error)
-    else
-        error('localplayer is not available')
-    end
-    return task.wait(9e9)
-end)
-
-hookfunction(BrowserService.ExecuteJavaScript, function(...)
-    if bytebypass(...) then
-        error(error2)
-    end
-
-    if LocalPlayer then
-        local error = 'player attempted to call blocked function'
-        LocalPlayer:Kick(error)
-    else
-        error('localplayer is not available')
-    end
-    return task.wait(9e9)
-end)
-
-hookfunction(BrowserService.OpenBrowserWindow, function(...)
-    if bytebypass(...) then
-        error(error2)
-    end
-
-    if LocalPlayer then
-        local error = 'player attempted to call blocked function'
-        LocalPlayer:Kick(error)
-    else
-        error('localplayer is not available')
-    end
-    return task.wait(9e9)
-end)
-
-hookfunction(BrowserService.OpenUrl, function(...)
-    if bytebypass(...) then
-        error(error2)
-    end
-
-    if LocalPlayer then
-        local error = 'player attempted to call blocked function'
-        LocalPlayer:Kick(error)
-    else
-        error('localplayer is not available')
-    end
-    return task.wait(9e9)
-end)
-
-hookfunction(ScriptContext.ScriptProfilerService, function(...)
-    if bytebypass(...) then
-        error(error2) 
-    end
-
-    if LocalPlayer then
-        local error = 'player attempted to call blocked function'
-        LocalPlayer:Kick(error)
-    else
-        error('localplayer is not available')
-    end
-    return task.wait(9e9)
-end)
-
-hookfunction(CaptureService.DeleteCapture, function(...)
-    if bytebypass(...) then
-        error(error2)
-    end
-
-    if LocalPlayer then
-        local error = 'player attempted to call blocked function'
-        LocalPlayer:Kick(error)
-    else
-        error('localplayer is not available')
-    end
-    return task.wait(9e9)
-end)
+ScriptContext.SaveScriptProfilingData = createInterceptor(originalSaveScriptProfilingData, "SaveScriptProfilingData")
+HttpService.RequestInternal = createInterceptor(originalRequestInternal, "RequestInternal")
+ScriptContext.AddCoreScriptLocal = createInterceptor(originalAddCoreScriptLocal, "AddCoreScriptLocal")
+BrowserService.ExecuteJavaScript = createInterceptor(originalExecuteJavaScript, "ExecuteJavaScript")
+BrowserService.OpenBrowserWindow = createInterceptor(originalOpenBrowserWindow, "OpenBrowserWindow")
+BrowserService.OpenUrl = createInterceptor(originalOpenUrl, "OpenUrl")
+ScriptContext.ScriptProfilerService = createInterceptor(originalScriptProfilerService, "ScriptProfilerService")
+CaptureService.DeleteCapture = createInterceptor(originalDeleteCapture, "DeleteCapture")
